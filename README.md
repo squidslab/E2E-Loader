@@ -63,6 +63,12 @@ If you want to build E2E-Loader from scratch, you can do so by running the follo
 mvn clean package
 ```
 
+Additionally, if you want to generate Javadoc documentation from scratch, you can run the following command:
+```
+mvn javadoc:javadoc
+```
+This command will generate Javadoc documentation in the `target/reports/apidocs` directory.
+
 
 ### Step 3: Usage Example
 
