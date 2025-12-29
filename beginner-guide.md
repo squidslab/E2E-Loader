@@ -56,7 +56,7 @@ You can check with: `java -version`. If not installed, download Java from https:
 
 2. **Download JMeter**.
 Go to the official download page: https://jmeter.apache.org/download_jmeter.cgi
-E2E-Loader was tested with version **3.6.3** of JMeter, so we recommend you download that version. Download the binary archive (ZIP or TGZ).
+Even though E2E-Loader should work without issues with any recent release of JMeter, it was thoroughly tested with version **5.5**, so we recommend you download that version. Download the binary archive (ZIP or TGZ). Download links are available here: https://archive.apache.org/dist/jmeter/binaries/.
 
 3. **Extract the Archive**. Unzip or untar the downloaded file into a directory of your choice.
 
