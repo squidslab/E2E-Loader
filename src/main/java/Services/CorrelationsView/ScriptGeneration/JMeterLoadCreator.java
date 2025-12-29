@@ -21,8 +21,29 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
-
+/**
+ * Creates a complete JMeter test plan wrapping multiple user behaviors (E2E GUI tests)
+ * chosen by the tester.
+ *
+ * <p>This class generates a single JMX file containing multiple Ultimate Thread Groups
+ * corresponding to different user scripts.
+ *
+ * <p>It handles:
+ * <ul>
+ *   <li>TestPlan creation</li>
+ *   <li>CookieManager addition</li>
+ *   <li>UltimateThreadGroup creation</li>
+ *   <li>Thread group mapping and aggregation</li>
+ *   <li>Writing the final JMX file to disk</li>
+ * </ul>
+ */
 public class JMeterLoadCreator {
+    /**
+     * Adds an HTTP Cookie Manager to the test plan.
+     *
+     * @param document XML document being modified
+     * @param hashTree parent hashTree element where the CookieManager is appended
+     */
     private static final String testplan = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
             "<jmeterTestPlan version=\"1.2\" properties=\"5.0\" jmeter=\"5.4.3\">\n" +
             "  <hashTree>\n" +
@@ -40,6 +61,13 @@ public class JMeterLoadCreator {
             "  </hashTree>\n" +
             "</jmeterTestPlan>";
 
+
+    /**
+     * Adds an HTTP Cookie Manager to the test plan.
+     *
+     * @param document XML document being modified
+     * @param hashTree parent hashTree element where the CookieManager is appended
+     */
 
     private static void addCookieManager(Document document,Element hashTree){
         /*
@@ -73,7 +101,12 @@ public class JMeterLoadCreator {
         hashTree.appendChild(cookieManager);
 
     }
-
+    /**
+     * Converts a string representation of XML to a Document object.
+     *
+     * @param xml XML string (not used directly in current implementation)
+     * @return parsed Document object or null on error
+     */
     private static Document converStringToXMLDocument(String xml) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder;
@@ -113,7 +146,15 @@ public class JMeterLoadCreator {
         transformer.transform(domSource,streamResult);
 
     }
-
+    /**
+     * Adds an Ultimate Thread Group to the test plan.
+     *
+     * @param doc       XML document being modified
+     * @param hashTree  parent hashTree element to append the thread group
+     * @param filename  name of the script / user behavior
+     * @param list      list of UltimateThreadGroup objects to add
+     * @throws IOException in case of file reading errors
+     */
     private static void  addUltimateThreadGroup (Document doc, Element hashTree,String filename ,ArrayList<UltimateThreadGroup> list) throws IOException {
 
         Element ultimateThreadTroup = doc.createElement("kg.apc.jmeter.threads.UltimateThreadGroup");
@@ -186,6 +227,13 @@ public class JMeterLoadCreator {
         hashTree.appendChild(importedNode);
     }
 
+    /**
+     * Converts an array of UltimateThreadGroup objects into a map keyed by filename.
+     *
+     * @param threadGroups list of UltimateThreadGroup objects
+     * @return map with filename as key and list of thread groups as value
+     */
+
     public static HashMap<String,ArrayList<UltimateThreadGroup>> ConvertThreadGroupArrayToMap(ArrayList<UltimateThreadGroup> threadGroups) {
         HashMap<String,ArrayList<UltimateThreadGroup>> result = new HashMap<>();
         for(UltimateThreadGroup td : threadGroups) {
@@ -198,7 +246,13 @@ public class JMeterLoadCreator {
         }
         return result;
     }
-
+    /**
+     * Returns the hashTree node from an existing JMX script by filename.
+     *
+     * @param filename name of the JMX script
+     * @return Node representing the hashTree or null if not found
+     * @throws IOException if file cannot be read
+     */
     private static Node returnNodehashScriptByName(String filename) throws IOException {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try(InputStream is = new FileInputStream(Paths.scripts_saved_path+"/"+filename))
@@ -222,6 +276,12 @@ public class JMeterLoadCreator {
         }
         return null;
     }
+    /**
+     * Returns a TestPlan element for the JMeter test plan.
+     *
+     * @param doc XML document being modified
+     * @return TestPlan element
+     */
     private static Element returnTestPlanNode(Document doc) {
         Element TestPlan = doc.createElement("TestPlan");
         TestPlan.setAttribute("guiclass","TestPlanGui");

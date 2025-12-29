@@ -6,9 +6,27 @@ import Services.ResponseAnalyzer.ResponseUnstructured;
 import Services.ResponseAnalyzer.StructuredObject;
 
 import java.util.List;
-
+/**
+ * Handles analysis of query parameters to detect dependencies between HTTP requests.
+ *
+ * <p>This class iterates over query parameters of a request and compares them with
+ * previous responses to identify dependencies. Detected dependencies are added
+ * to the {@link DependencyGraph}.
+ */
 public class QueryParameterDependency {
-
+    /**
+     * Checks for query parameter-based dependencies for a given request.
+     *
+     * <p>For each query parameter in the target request, this method examines all
+     * previous responses (from {@code first_index_response} to {@code req_index - 1})
+     * to detect dependencies, updating the {@link DependencyGraph} if a dependency is found.
+     *
+     * @param responseUnstructuredList list of previously analyzed unstructured responses
+     * @param req_index index of the current request in the HAR sequence
+     * @param dependencyGraph the graph to update with detected dependencies
+     * @param to the target node representing the current request
+     * @param first_index_response index of the first response to consider for dependency checks
+     */
     public static void check_queryParams_dependency(List<ResponseUnstructured> responseUnstructuredList, int req_index, DependencyGraph dependencyGraph, MyNode to,int first_index_response) {
         for( QueryParam queryParam: to.getRequest().getQueryParams()){
             for (int response_index = first_index_response; response_index < req_index; response_index++) {

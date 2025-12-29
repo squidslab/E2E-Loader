@@ -42,6 +42,24 @@ import Entity.EdgeQueryParam;
 import Properties.Paths;
 import Entity.EdgeBodyJSON;
 
+/**
+ * Handles the adaptation of a JMeter test plan generated from a HAR conversion.
+ *
+ * <p>This class takes the JMX skeleton produced by the {@code Converter} and
+ * applies additional configuration defined by the tester, such as:
+ * <ul>
+ *   <li>Variable substitutions</li>
+ *   <li>Web service–related parameters</li>
+ *   <li>Response handling and dependency-based adaptations</li>
+ * </ul>
+ *
+ * <p>The adaptation logic is driven by a {@link DependencyGraph}, which describes
+ * relationships between requests and variables extracted during analysis.
+ *
+ * <p>The resulting JMX file is modified in-place or rewritten to include all
+ * required configuration elements.
+ */
+
 public class JMeterAdaption {
 
 
@@ -54,7 +72,15 @@ public class JMeterAdaption {
         ja.replaceAdaption(dependencyGraph,filenameJmx,filename);
     }
 
-
+    /**
+     * Creates and configures the HeaderManager used for WebSocket requests.
+     *
+     * @param doc           XML document being modified
+     * @param url           WebSocket endpoint URL
+     * @param replacement   JSON object containing replacement values
+     * @param FILENAME_HAR  name of the source HAR file
+     * @return the created HeaderManager node
+     */
     private Node createHeaderManagerWSS(Document doc,String url, JSONObject replacement,String FILENAME_HAR) throws  Exception{
 
         ArrayList<String> permissedItems = new ArrayList<>(Arrays.asList("Accept-Encoding","Accept-Language","Cache-Control","Cookie"));
@@ -111,7 +137,12 @@ public class JMeterAdaption {
         }
         return headerManager;
     }
-
+    /**
+     * Appends user-defined WebSocket variables to all thread groups.
+     *
+     * @param doc     XML document being modified
+     * @param threads list of thread group nodes
+     */
     private void appendWssUserDefineVariables(Document doc, NodeList threads) {
 
         for(int i=0;i<threads.getLength();i++) {
@@ -126,6 +157,13 @@ public class JMeterAdaption {
             }
         }
     }
+    /**
+     * Appends CSV configuration elements required by dependency resolution.
+     *
+     * @param doc       XML document being modified
+     * @param threads   thread groups where CSV configs are added
+     * @param csv_deps  list of CSV dependency definitions
+     */
 
     private void appendCSVConfig(Document doc, NodeList threads, List<CSVNode>csv_deps) {
 
@@ -143,6 +181,13 @@ public class JMeterAdaption {
             }
         }
     }
+    /**
+     * Creates a CSV Data Set Config element from a CSV dependency definition.
+     *
+     * @param doc XML document being modified
+     * @param csv CSV dependency metadata
+     * @return created CSV Data Set Config node
+     */
 
     private Node createCSVDataSetConfigElement(Document doc, CSVNode csv) {
 
@@ -201,6 +246,12 @@ public class JMeterAdaption {
         return csvDataNode;
     }
 
+    /**
+     * Creates user-defined variables used by WebSocket samplers.
+     *
+     * @param doc XML document being modified
+     * @return node containing WebSocket user variables
+     */
     private Node createUserVariablesForWebSocket(Document doc) {
 
         ArrayList<String> listName = new ArrayList<>(Arrays.asList("webSocketResponding"));
@@ -240,6 +291,16 @@ public class JMeterAdaption {
         return Arguments;
     }
 
+    /**
+     * Creates a WebSocket connection sampler node.
+     *
+     * @param doc            XML document being modified
+     * @param hashTreeFrather parent hash tree node
+     * @param url_request    WebSocket endpoint URL
+     * @param replacement    JSON object containing replacement values
+     * @param FILENAME_HAR   name of the source HAR file
+     * @return created WebSocket connection node
+     */
     private Node createWSSConnectionNode(Document doc,Node hashTreeFrather ,String url_request, JSONObject replacement,String FILENAME_HAR) throws Exception {
 
         Node hashTreeConnection = doc.createElement("hashTree");
@@ -285,6 +346,15 @@ public class JMeterAdaption {
         return hashTreeConnection;
     }
 
+    /**
+     * Appends a WebSocket connection sampler and its related configuration.
+     *
+     * @param doc            XML document being modified
+     * @param hashTree       parent hash tree node
+     * @param url_request    WebSocket endpoint URL
+     * @param replacement    JSON object containing replacement values
+     * @param FILENAME_HAR   name of the source HAR file
+     */
     private void appendWebSocketconnection (Document doc, Node hashTree, String url_request , JSONObject replacement,String FILENAME_HAR ) throws Exception {
         Node genericControllerConnection = doc.createElement("GenericController");
         ((Element)genericControllerConnection).setAttribute("guiclass","LogicControllerGui");
@@ -295,10 +365,28 @@ public class JMeterAdaption {
         hashTree.appendChild(createWSSConnectionNode(doc,hashTree,url_request,replacement,FILENAME_HAR));
     }
 
+    /**
+     * Appends a HeaderManager to a WebSocket request.
+     *
+     * @param doc            XML document being modified
+     * @param hashTree       parent hash tree node
+     * @param url_request    WebSocket endpoint URL
+     * @param replacement    JSON object containing replacement values
+     * @param FILENAME_HAR   name of the source HAR file
+     */
     private void appendHeaderManagerWebSocketRequest(Document doc, Node hashTree, String url_request, JSONObject replacement,String FILENAME_HAR) throws Exception {
         hashTree.appendChild(createHeaderManagerWSS(doc,url_request,replacement,FILENAME_HAR));
         hashTree.appendChild(doc.createElement("hashTree"));
     }
+
+    /**
+     * Adds regular expression extractors based on dependency information.
+     *
+     * @param doc          XML document being modified
+     * @param http         HTTP sampler node
+     * @param dependencies list of dependency definitions
+     * @param index        index of the current request
+     */
 
     public void addRegExtractorMain(Document doc, Node http,List<Object> dependencies,int index) {
         String  url = http.getAttributes().getNamedItem("testname").getTextContent();
@@ -354,7 +442,11 @@ public class JMeterAdaption {
         Node hashTree = http.getNextSibling().getNextSibling();
         addRegExtractor(doc, hashTree,variable_names,path_expression,default_value);
     }
-
+    /**
+     * Disables the default HeaderManager in the JMX document.
+     *
+     * @param doc XML document being modified
+     */
     private void disableHeaderManager(Document doc) {
         NodeList listofHeaderManager = doc.getElementsByTagName("HeaderManager");
         System.out.println(listofHeaderManager.getLength());
@@ -362,6 +454,13 @@ public class JMeterAdaption {
         ((Element)item).setAttribute("enabled","false");
     }
 
+    /**
+     * Applies all adaptation rules to the JMX file based on the dependency graph.
+     *
+     * @param dependencyGraph dependency graph describing request relationships
+     * @param FILENAME_JMX     JMX file to be modified
+     * @param filename         original HAR filename
+     */
     public void replaceAdaption(DependencyGraph dependencyGraph, String FILENAME_JMX,String filename) throws  Exception{
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         try (InputStream is = new FileInputStream(FILENAME_JMX))
@@ -450,6 +549,12 @@ public class JMeterAdaption {
     }
 //}
 
+    /**
+     * Appends a sampler that closes an active WebSocket connection.
+     *
+     * @param doc  XML document being modified
+     * @param hash parent hash tree node
+     */
     private void appendCloseWssConnection(Document doc, Node hash) {
         Node close = doc.createElement("eu.luminis.jmeter.wssampler.CloseWebSocketSampler");
         ((Element)close).setAttribute("guiclass","eu.luminis.jmeter.wssampler.CloseWebSocketSamplerGui");
@@ -471,6 +576,13 @@ public class JMeterAdaption {
         hash.appendChild(doc.createElement("hashTree"));
     }
 
+    /**
+     * Adds a post-processor that saves the full response content.
+     *
+     * @param doc   XML document being modified
+     * @param http  HTTP sampler node
+     * @param index request index
+     */
 
     private void addPostProcessorSaveAllResponse(Document doc, Node http,int index) {
         Node postProcessor = null;
@@ -511,7 +623,12 @@ public class JMeterAdaption {
         hashTree.appendChild(postProcessor);
 
     }
-
+    /**
+     * Writes the modified XML document to the provided output stream.
+     *
+     * @param doc    XML document to write
+     * @param output destination output stream
+     */
     private void writeXml(Document doc, OutputStream output) throws Exception {
         doc.getDocumentElement().normalize();
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -521,7 +638,15 @@ public class JMeterAdaption {
         StreamResult result = new StreamResult(output);
         transformer.transform(source,result);
     }
-
+    /**
+     * Adds a regular expression extractor to the specified sampler.
+     *
+     * @param doc      XML document being modified
+     * @param hashTree parent hash tree node
+     * @param name     variable name to store the extracted value
+     * @param path     regular expression or JSON path
+     * @param defa     default value if extraction fails
+     */
     public  void addRegExtractor(Document doc, Node hashTree,String name, String path, String defa) {
 
         Node regExtr = null;
@@ -555,7 +680,12 @@ public class JMeterAdaption {
         hashTree.appendChild(doc.createElement("hashTree"));
 
     }
-
+    /**
+     * Checks whether the response for the given request index has already been saved.
+     *
+     * @param index_req request index
+     * @return {@code true} if the response was already saved, {@code false} otherwise
+     */
     public boolean checkRegExtractor(Node http,int index_req) {
         String  url = http.getAttributes().getNamedItem("testname").getTextContent();
         for(int i=0; i<variables.size();i++) {
@@ -564,6 +694,12 @@ public class JMeterAdaption {
         return false;
     }
 
+    /**
+     * Checks whether the response for the given request index has already been saved.
+     *
+     * @param index_req request index
+     * @return {@code true} if the response was already saved, {@code false} otherwise
+     */
     public boolean checkTotalSaveResponse(int index_req){
         for(Integer i : SaveTotalResponse) {
             if(i == index_req)
@@ -571,7 +707,13 @@ public class JMeterAdaption {
         }
         return false;
     }
-
+    /**
+     * Analyzes an HTTP sampler and applies dependency-based replacements.
+     *
+     * @param doc          XML document being modified
+     * @param http         HTTP sampler node
+     * @param dependencies list of dependency edges
+     */
     public void analizeHttpNode(Document doc, Node http, List<Edge> dependencies) throws MalformedURLException, URISyntaxException, ParseException {
         NodeList childNodes = http.getChildNodes();
         for(int j=0 ; j< childNodes.getLength();j++) {
@@ -609,7 +751,12 @@ public class JMeterAdaption {
             }
         }
     }
-
+    /**
+     * Converts a JSONPath expression from bracket notation to dot notation.
+     *
+     * @param path JSONPath expression
+     * @return converted path using dot notation
+     */
     private String convertBracketJsonPathToDotNotation(String path) {
         StringBuilder result = new StringBuilder();
         String regex = "\\['([^\\]]+)'\\]|\\[(\\d+)]";
@@ -630,7 +777,14 @@ public class JMeterAdaption {
 
         return result.toString();
     }
-
+    /**
+     * Recursively searches a JSON structure to find the path of a given key.
+     *
+     * @param json        JSON object or array to inspect
+     * @param key         key to search for
+     * @param currentPath current traversal path
+     * @return full JSON path to the key, or {@code null} if not found
+     */
     private String findJsonPathRecursive(Object json, String key, String currentPath) {
         if (json instanceof JSONObject) {
             JSONObject jsonObject = (JSONObject) json;
@@ -662,7 +816,14 @@ public class JMeterAdaption {
         }
         return null;
     }
-
+    /**
+     * Replaces values inside a JSON request body using dependency information.
+     *
+     * @param doc          XML document being modified
+     * @param http         HTTP sampler node
+     * @param item         XML node containing the request body
+     * @param dependencies list of dependency edges
+     */
     private void replacementInPostDataBodyJson(Document doc,Node http, Node item, List<Edge> dependencies) throws ParseException {
         NodeList elementPropChild = item.getChildNodes();
         for (int k = 0; k < elementPropChild.getLength(); k++) {

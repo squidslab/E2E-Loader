@@ -10,8 +10,33 @@ import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.util.List;
 
+/**
+ * Handles analysis of request bodies (POST/PUT) to detect dependencies between requests.
+ *
+ * <p>This class inspects the request payloads in different formats:
+ * <ul>
+ *     <li>application/x-www-form-urlencoded</li>
+ *     <li>application/json (objects and arrays)</li>
+ * </ul>
+ * It updates the {@link DependencyGraph} based on detected dependencies between requests.
+ */
 public class BodyDependency {
 
+    /**
+     * Checks for dependencies in the body of a POST or PUT request.
+     *
+     * <p>If the request body is form-urlencoded, it delegates to
+     * {@link #check_body_urleconded_dep(List, int, DependencyGraph, MyNode, int)}.
+     * If the body is JSON, it parses it and delegates to
+     * {@link #check_application_json_dep(List, Object, String, int, DependencyGraph, MyNode, int)}.
+     *
+     * @param responseUnstructuredList list of previously analyzed unstructured responses
+     * @param req_index index of the current request in the HAR sequence
+     * @param dependencyGraph the graph to update with detected dependencies
+     * @param to the target node representing the current request
+     * @param first_index_response index of the first response to consider for dependency checks
+     * @throws IOException if reading or parsing the request body fails
+     */
     public static void check_body_dependency(List<ResponseUnstructured> responseUnstructuredList, int req_index, DependencyGraph dependencyGraph, MyNode to, int first_index_response) throws IOException {
         if ("application/x-www-form-urlencoded".equals(to.getRequest().getPostData().getMimeType())) {
             check_body_urleconded_dep(responseUnstructuredList, req_index, dependencyGraph, to,first_index_response);

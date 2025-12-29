@@ -15,25 +15,64 @@ import java.util.List;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+/**
+ * Extracts and analyzes dependencies from a HAR (HTTP Archive) file.
+ *
+ * <p>This class handles:
+ * <ul>
+ *     <li>Reading HAR files</li>
+ *     <li>Parsing responses</li>
+ *     <li>Analyzing headers, query parameters, cookies, and body data</li>
+ *     <li>Building a dependency graph of HTTP requests</li>
+ * </ul>
+ */
+
 public class ExtractDependencies {
     File file_har;
     String har_content;
-
+    /**
+     * Returns the parsed HAR object.
+     *
+     * @return HAR object
+     */
     public Har getHar() {
         return har;
     }
 
     Har har;
 
+    /**
+     * Returns the HAR file.
+     *
+     * @return HAR file
+     */
     public File getFile_har() {
         return file_har;
     }
 
+    /**
+     * Returns the list of unstructured response objects parsed from the HAR.
+     *
+     * @return list of ResponseUnstructured
+     */
     public List<ResponseUnstructured> getResponseUnstructuredList() {
         return responseUnstructuredList;
     }
 
+    /**
+     * Analyzes all responses in the HAR file.
+     *
+     * <p>For JSON responses, it extracts the unstructured representation.
+     * It also analyzes response headers for all entries.
+     */
     List<ResponseUnstructured> responseUnstructuredList;
+
+    /**
+     * Constructs an ExtractDependencies object from a HAR file.
+     *
+     * @param har_file HAR file to read
+     * @throws IOException if the file cannot be read
+     */
     public ExtractDependencies(File har_file) throws IOException {
         this.file_har = har_file;
         this.har_content= FileUtils.readFileToString(har_file, UTF_8);
@@ -42,6 +81,12 @@ public class ExtractDependencies {
         this.har = gson.fromJson(har_content,Har.class);
     }
 
+    /**
+     * Analyzes all responses in the HAR file.
+     *
+     * <p>For JSON responses, it extracts the unstructured representation.
+     * It also analyzes response headers for all entries.
+     */
     public void analyze_responses(){
         ResponseAnalyzer responseAnalyzer = new ResponseAnalyzer();
         for(int i=0; i<har.getLog().getEntries().length;i++){
@@ -60,6 +105,22 @@ public class ExtractDependencies {
         }
     }
 
+
+    /**
+     * Builds a dependency graph of all requests in the HAR file.
+     *
+     * <p>This method checks dependencies between requests based on:
+     * <ul>
+     *     <li>URL segments</li>
+     *     <li>Headers</li>
+     *     <li>Query parameters</li>
+     *     <li>Request body</li>
+     *     <li>Cookies</li>
+     * </ul>
+     *
+     * @return DependencyGraph representing all dependencies between requests
+     * @throws IOException if there is an error processing request data
+     */
     public DependencyGraph build_dependencies_graph() throws IOException {
         DependencyGraph dependencyGraph = new DependencyGraph();
         dependencyGraph.addRequestoToGraph(this.har.getLog().getEntries()[0].getRequest(),0);

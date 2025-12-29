@@ -1,6 +1,27 @@
 package Services.Dependencies;
-
+/**
+ * Utility class for computing the Longest Common Substring (LCS) similarity
+ * between two character sequences.
+ *
+ * <p>This implementation returns a normalized similarity value between 0 and 1,
+ * calculated as the length of the longest common substring divided by the
+ * maximum length of the two input sequences.
+ */
 public class LCS {
+
+    /**
+     * Computes the normalized longest common substring (LCS) similarity between two character arrays.
+     *
+     * <p>The method uses dynamic programming to calculate the length of the longest
+     * contiguous substring shared by {@code X} and {@code Y}. The result is then
+     * normalized by dividing by the maximum length of the two input arrays.
+     *
+     * @param X first character array
+     * @param Y second character array
+     * @param m length of the first array {@code X}
+     * @param n length of the second array {@code Y}
+     * @return a float value between 0 and 1 representing the normalized longest common substring similarity
+     */
     public static float LCSubStr(char X[], char Y[], int m, int n)
     {
         // Create a table to store

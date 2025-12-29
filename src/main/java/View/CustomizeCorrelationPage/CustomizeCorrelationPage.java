@@ -356,7 +356,7 @@ public class CustomizeCorrelationPage extends JFrame {
         return checkItemListsRequest;
     }
 
-    public void setCheckItemListsRequest(List<Map<String, java.util.List<CheckableItem>>> checkItemListsRequest) {
+    public void setCheckItemListsRequest(List<Map<String, List<CheckableItem>>> checkItemListsRequest) {
         this.checkItemListsRequest = checkItemListsRequest;
     }
 

@@ -1,10 +1,34 @@
 package Services.Dependencies;
-
+/**
+ * Utility class to calculate the Levenshtein distance between two strings.
+ *
+ * <p>The Levenshtein distance is a measure of the minimum number of single-character
+ * edits (insertions, deletions, or substitutions) required to change one string
+ * into another.
+ */
 public class LevenshteinDistance {
+    /**
+     * Computes the Levenshtein distance between two strings.
+     *
+     * @param s1 the first string
+     * @param s2 the second string
+     * @return the number of edits required to convert s1 into s2
+     */
     public static int levenshteinDistance(String s1, String s2) {
         return dist( s1.toCharArray(), s2.toCharArray());
     }
 
+
+    /**
+     * Computes the Levenshtein distance between two character arrays.
+     *
+     * <p>This implementation uses a memory-efficient approach by storing only the
+     * previous row of the distance matrix.
+     *
+     * @param s1 the first character array
+     * @param s2 the second character array
+     * @return the number of edits required to convert s1 into s2
+     */
     public static int dist( char[] s1, char[] s2 ) {
 
         // memoize only previous line of distance matrix

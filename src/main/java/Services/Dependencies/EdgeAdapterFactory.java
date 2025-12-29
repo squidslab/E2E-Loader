@@ -7,8 +7,30 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
-
+/**
+ * Custom Gson {@link TypeAdapterFactory} to handle runtime conversion of {@link Edge} objects.
+ *
+ * <p>This factory creates a {@link TypeAdapter} that deserializes JSON into the correct
+ * subclass of {@link Edge} based on the {@code type} property in the JSON:
+ * <ul>
+ *     <li>{@code bodyjson} → {@link EdgeBodyJSON}</li>
+ *     <li>{@code bodyue} → {@link EdgeBodyUE}</li>
+ *     <li>{@code cookie} → {@link EdgeCookie}</li>
+ *     <li>{@code header} → {@link EdgeHeader}</li>
+ *     <li>{@code queryparam} → {@link EdgeQueryParam}</li>
+ *     <li>{@code url} → {@link EdgeUrl}</li>
+ *     <li>default → {@link Edge}</li>
+ * </ul>
+ */
 public class EdgeAdapterFactory implements TypeAdapterFactory {
+    /**
+     * Creates a custom TypeAdapter for {@link Edge} objects.
+     *
+     * @param gson Gson instance
+     * @param type the type to be adapted
+     * @param <T> generic type
+     * @return a TypeAdapter for {@link Edge} and its subclasses, or {@code null} if not applicable
+     */
     @Override
     public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
         if (!Edge.class.isAssignableFrom(type.getRawType())) {
@@ -17,7 +39,9 @@ public class EdgeAdapterFactory implements TypeAdapterFactory {
         TypeAdapter<Edge> defaultAdapter = (TypeAdapter<Edge>) gson.getDelegateAdapter(this, TypeToken.get(Edge.class));
         return (TypeAdapter<T>) new EdgeAdapter(gson,defaultAdapter);
     }
-
+    /**
+     * Custom TypeAdapter for deserializing Edge subclasses at runtime.
+     */
     private static class EdgeAdapter extends  TypeAdapter<Edge>{
         private final TypeAdapter<Edge> defaultAdapter;
         private final Gson gson;

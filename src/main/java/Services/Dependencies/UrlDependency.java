@@ -7,8 +7,27 @@ import Services.ResponseAnalyzer.StructuredObject;
 
 import java.net.URI;
 import java.util.List;
-
+/**
+ * Handles the detection of dependencies based on the URL paths of HTTP requests.
+ *
+ * <p>This class inspects the path segments of the target request's URL and compares
+ * them with previous responses to identify potential dependencies. Detected dependencies
+ * are added to the {@link DependencyGraph}.
+ */
 public class UrlDependency {
+    /**
+     * Checks for URL-based dependencies for a given request.
+     *
+     * <p>For each segment in the target request's URL path, this method examines all
+     * previous responses (from {@code first_index_response} to {@code req_index - 1})
+     * to detect dependencies. Detected dependencies are added to the {@link DependencyGraph}.
+     *
+     * @param response list of previously analyzed unstructured responses
+     * @param req_index index of the current request in the HAR sequence
+     * @param dependencyGraph the graph to update with detected dependencies
+     * @param to the target node representing the current request
+     * @param first_index_response index of the first response to consider for dependency checks
+     */
     public static void check_url_dependencies(List<ResponseUnstructured> response, int req_index, DependencyGraph dependencyGraph, MyNode to,int first_index_response){
         //System.out.println("URL:"+to.getRequest().getUrl());
         URI uri = URI.create(to.getRequest().getUrl());
@@ -22,6 +41,7 @@ public class UrlDependency {
             }
         }
     }
+
 
     private static boolean check_subpath(String path, Object response, DependencyGraph dependencyGraph, MyNode to , MyNode from, String possible_name,int req_index,int from_index){
         boolean res = false;
